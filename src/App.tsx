@@ -1,8 +1,10 @@
-import { Toaster } from "@/components/ui/toaster";
+import { Toaster } from "@/components/ui/toaster"; // Replace or remove if using 'sonner' only
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+
+// Pages
 import Index from "./pages/Index";
 import SearchResults from "./pages/SearchResults";
 import SeatSelection from "./pages/SeatSelection";
@@ -15,8 +17,11 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      {/* Notifications */}
       <Toaster />
       <Sonner />
+
+      {/* Routing */}
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />

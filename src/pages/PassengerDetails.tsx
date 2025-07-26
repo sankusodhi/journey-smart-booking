@@ -5,6 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import PaymentButton from "../components/PaymentButton";
+import { supabase } from "@/lib/supabaseClient";
 import { ArrowLeft, User, Mail, Phone, Calendar, MapPin } from "lucide-react";
 import Header from "@/components/Header";
 
@@ -46,14 +48,45 @@ const PassengerDetails = () => {
   };
 
   const totalAmount = selectedSeats.length * busData.price + Math.round(selectedSeats.length * busData.price * 0.05);
+const [contactEmail, setContactEmail] = useState("");
+const [contactPhone, setContactPhone] = useState("");
 
-  const handleContinue = () => {
-    // Validate form data
-    const isValid = passengers.every(p => p.name && p.age && p.email && p.phone);
-    if (isValid) {
-      navigate(`/payment/${busId}`);
+ const handleContinue = async () => {
+  // Validate
+  const isValid = passengers.every(p => p.name && p.age && p.email && p.phone);
+  if (!isValid || !contactEmail || !contactPhone) {
+    alert("Please fill all required fields.");
+    return;
+  }
+
+  // Insert each booking
+  try {
+    for (let i = 0; i < passengers.length; i++) {
+      const passenger = passengers[i];
+      const { error } = await supabase.from("bookings").insert([
+        {
+          user_email: passenger.email,
+          bus_id: busId,
+          date: new Date().toISOString().split("T")[0],
+          status: "confirmed"
+        }
+      ]);
+
+      if (error) {
+        console.error("Supabase insert error:", error.message);
+        alert("Booking failed: " + error.message);
+        return;
+      }
     }
-  };
+
+    // Navigate to payment if successful
+    navigate(`/payment/${busId}`);
+  } catch (err) {
+    console.error(err);
+    alert("Unexpected error occurred.");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -88,6 +121,7 @@ const PassengerDetails = () => {
             <div className="w-8 h-px bg-white/30"></div>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-full bg-white/20 text-white font-bold flex items-center justify-center text-sm">3</div>
+              <PaymentButton amount={5000} passengerDetails={{ name: "Sanku", phone: "9876543210", email: "sanku@example.com" }} />
               <span className="text-sm text-white/70">Payment</span>
             </div>
           </div>

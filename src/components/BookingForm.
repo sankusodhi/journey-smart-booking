@@ -1,0 +1,65 @@
+import { useState, FormEvent } from 'react'
+import { supabase } from '../supabaseClient'
+
+function BookingForm() {
+  const [busId, setBusId] = useState<string>('')
+  const [date, setDate] = useState<string>('')
+  const [status, setStatus] = useState<string>('confirmed')
+  const [message, setMessage] = useState<string>('')
+
+  const handleBooking = async (e: FormEvent) => {
+    e.preventDefault()
+
+    const { data: userData, error: userError } = await supabase.auth.getUser()
+    if (userError || !userData?.user?.email) {
+      setMessage('Error fetching user info')
+      return
+    }
+
+    const { error } = await supabase.from('bookings').insert([
+      {
+        bus_id: busId,
+        date: date,
+        user_email: userData.user.email,
+        status: status,
+      },
+    ])
+
+    if (error) {
+      setMessage(`Error: ${error.message}`)
+    } else {
+      setMessage('Booking successful!')
+      setBusId('')
+      setDate('')
+    }
+  }
+
+  return (
+    <form onSubmit={handleBooking} className="p-4 space-y-4 max-w-md mx-auto">
+      <input
+        type="text"
+        placeholder="Bus ID"
+        value={busId}
+        className="border px-4 py-2 w-full"
+        onChange={(e) => setBusId(e.target.value)}
+        required
+      />
+      <input
+        type="date"
+        value={date}
+        className="border px-4 py-2 w-full"
+        onChange={(e) => setDate(e.target.value)}
+        required
+      />
+      <button
+        type="submit"
+        className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded"
+      >
+        Book Now
+      </button>
+      {message && <p className="text-sm text-gray-700">{message}</p>}
+    </form>
+  )
+}
+
+export default BookingForm
